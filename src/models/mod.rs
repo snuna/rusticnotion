@@ -98,23 +98,6 @@ impl ListResponse<Object> {
         }
     }
 
-    pub(crate) fn expect_databases(self) -> Result<ListResponse<Database>, crate::Error> {
-        let databases: Result<Vec<_>, _> = self
-            .results
-            .into_iter()
-            .map(|object| match object {
-                Object::Database { database } => Ok(database),
-                response => Err(Error::UnexpectedResponse { response }),
-            })
-            .collect();
-
-        Ok(ListResponse {
-            results: databases?,
-            has_more: self.has_more,
-            next_cursor: self.next_cursor,
-        })
-    }
-
     pub(crate) fn expect_pages(self) -> Result<ListResponse<Page>, crate::Error> {
         let items: Result<Vec<_>, _> = self
             .results
