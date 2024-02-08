@@ -1,6 +1,9 @@
+use dotenv::dotenv;
 use notion::NotionApi;
 
 pub fn test_token() -> String {
+    dotenv().ok();
+
     let token = {
         if let Some(token) = std::env::var("NOTION_API_TOKEN").ok() {
             token

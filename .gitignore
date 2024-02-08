@@ -11,3 +11,5 @@ Cargo.lock
 
 .api_token
 todo_config.toml
+
+.env
