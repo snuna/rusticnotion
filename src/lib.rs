@@ -4,7 +4,7 @@ use crate::models::search::{DatabaseQuery, SearchRequest};
 use crate::models::{Database, ListResponse, Object, Page};
 use ids::{AsIdentifier, PageId};
 use models::block::Block;
-use models::search::{FilterProperty, FilterValue, NotionSearch};
+use models::search::NotionSearch;
 use models::PageCreateRequest;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{header, Client, ClientBuilder, RequestBuilder};
@@ -116,12 +116,9 @@ impl NotionApi {
     /// Because of the deprecation of the original endpoint this just calls
     /// [search()](Self::search()) with a filter on databases
     pub async fn list_databases(&self) -> Result<ListResponse<Database>, Error> {
-        self.search(NotionSearch::Filter {
-            property: FilterProperty::Object,
-            value: FilterValue::Database,
-        })
-        .await
-        .map(|response| response.only_databases())
+        self.search(NotionSearch::filter_by_databases())
+            .await
+            .map(|response| response.only_databases())
     }
 
     /// Search all pages in notion.

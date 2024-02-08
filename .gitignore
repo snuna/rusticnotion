@@ -13,3 +13,4 @@ Cargo.lock
 todo_config.toml
 
 .env
+scratch.json
