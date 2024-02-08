@@ -9,6 +9,22 @@ Maintained fork, based on the awesome [jakeswenson/notion](https://github.com/ja
 
 Under active development.
 
+## How to use
+
+Right now we are working on Version 0.6.0 with the goal to fix all current issues in [jakeswenson/notion](https://github.com/jakeswenson/notion) and make the library compatible with the latest version of the Notion API (2022-06-28).
+
+During this phase we recommend using git for linking the library to your project.
+
+```toml
+rusticnotion = { git = "https://github.com/snuna/rusticnotion.git" }
+```
+
+Once Version 0.6.0 is released, we will publish the library to crates.io.
+
+```toml
+rusticnotion = "0.6.0"
+```
+
 ## Docs
 
 The generated documentation site is available here: https://docs.rs/rusticnotion/
