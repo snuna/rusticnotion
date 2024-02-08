@@ -125,6 +125,21 @@ pub enum SelectCondition {
 
 #[derive(Serialize, Debug, Eq, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+pub enum StatusCondition {
+    /// Only return pages where the page property value matches the provided value exactly.
+    Equals(String),
+    /// Only return pages where the page property value does not match the provided value exactly.
+    DoesNotEqual(String),
+    /// Only return pages where the page property value is empty.
+    #[serde(serialize_with = "serialize_to_true")]
+    IsEmpty,
+    /// Only return pages where the page property value is present.
+    #[serde(serialize_with = "serialize_to_true")]
+    IsNotEmpty,
+}
+
+#[derive(Serialize, Debug, Eq, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum MultiSelectCondition {
     /// Only return pages where the page property value contains the provided value.
     Contains(String),
