@@ -1,3 +1,4 @@
+use test_log::test;
 mod common;
 use common::test_client;
 use notion::{
@@ -8,7 +9,7 @@ use notion::{
     },
 };
 
-#[tokio::test]
+#[test(tokio::test)]
 async fn get_block_children() -> Result<(), Box<dyn std::error::Error>> {
     let api = test_client();
 
