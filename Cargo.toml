@@ -1,12 +1,12 @@
 [package]
-name = "notion"
-version = "0.5.1"
-authors = ["Jake Swenson <jake@jakeswenson.com>"]
+name = "rusticnotion"
+version = "0.5.2"
+authors = ["Ben Weber <ben@b3ngg.com>"]
 edition = "2018"
-repository = "https://github.com/jakeswenson/notion"
+repository = "https://github.com/snuna/rusticnotion"
 readme = "README.md"
 
-description = "A Notion Api Client"
+description = "Notion Offical API client library for rust, maintained fork."
 license = "MIT"
 
 [dependencies]
