@@ -32,7 +32,7 @@ fn skim_select_database(databases: Vec<Database>) -> Result<DatabaseId> {
     let selected_items = Skim::run_with(&options, Some(receiver))
         .filter(|out| !out.is_abort)
         .map(|out| out.selected_items)
-        .unwrap_or_else(|| Vec::new());
+        .unwrap_or_default();
 
     let db = selected_items
         .first()
