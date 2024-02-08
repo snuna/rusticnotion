@@ -1,7 +1,7 @@
 use test_log::test;
 mod common;
 use common::test_client;
-use notion::models::{
+use rusticnotion::models::{
     search::{
         DatabaseQuery, FilterCondition, FilterProperty, FilterValue, NotionSearch,
         PropertyCondition, TextCondition,

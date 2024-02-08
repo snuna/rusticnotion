@@ -1,9 +1,9 @@
 use crate::TodoConfig;
 use anyhow::Result;
-use notion::ids::{AsIdentifier, DatabaseId};
-use notion::models::search::NotionSearch;
-use notion::models::Database;
-use notion::NotionApi;
+use rusticnotion::ids::{AsIdentifier, DatabaseId};
+use rusticnotion::models::search::NotionSearch;
+use rusticnotion::models::Database;
+use rusticnotion::NotionApi;
 use skim::{Skim, SkimItem, SkimItemReceiver, SkimItemSender, SkimOptions};
 use std::borrow::Cow;
 use std::ops::Deref;

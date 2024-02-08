@@ -1,5 +1,5 @@
 use dotenv::dotenv;
-use notion::NotionApi;
+use rusticnotion::NotionApi;
 
 pub fn test_token() -> String {
     dotenv().ok();

@@ -1,7 +1,7 @@
 use test_log::test;
 mod common;
 use common::test_client;
-use notion::{
+use rusticnotion::{
     ids::BlockId,
     models::{
         search::{FilterProperty, FilterValue, NotionSearch},
