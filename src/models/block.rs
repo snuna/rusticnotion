@@ -5,6 +5,7 @@ use crate::ids::{AsIdentifier, BlockId, DatabaseId, PageId};
 use crate::models::text::{RichText, TextColor};
 use crate::models::users::UserCommon;
 
+#[cfg(test)]
 mod tests;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
@@ -320,7 +321,7 @@ pub enum Block {
     ChildDatabase {
         #[serde(flatten)]
         common: BlockCommon,
-        child_page: ChildDatabaseFields,
+        child_database: ChildDatabaseFields,
     },
     Embed {
         #[serde(flatten)]
@@ -462,9 +463,9 @@ impl AsIdentifier<BlockId> for Block {
     }
 }
 
-impl Into<CreateBlock> for Block {
-    fn into(self) -> CreateBlock {
-        match self {
+impl From<Block> for CreateBlock {
+    fn from(val: Block) -> Self {
+        match val {
             Block::Paragraph { paragraph, .. } => CreateBlock::Paragraph { paragraph },
             Block::Heading1 { heading_1, .. } => CreateBlock::Heading1 { heading_1 },
             Block::Heading2 { heading_2, .. } => CreateBlock::Heading2 { heading_2 },
@@ -481,7 +482,9 @@ impl Into<CreateBlock> for Block {
             Block::Toggle { toggle, .. } => CreateBlock::Toggle { toggle },
             Block::Code { code, .. } => CreateBlock::Code { code },
             Block::ChildPage { child_page, .. } => CreateBlock::ChildPage { child_page },
-            Block::ChildDatabase { child_page, .. } => CreateBlock::ChildDatabase { child_page },
+            Block::ChildDatabase { child_database, .. } => {
+                CreateBlock::ChildDatabase { child_database }
+            }
             Block::Embed { embed, .. } => CreateBlock::Embed { embed },
             Block::Image { image, .. } => CreateBlock::Image { image },
             Block::Video { video, .. } => CreateBlock::Video { video },
@@ -553,7 +556,7 @@ pub enum CreateBlock {
         child_page: ChildPageFields,
     },
     ChildDatabase {
-        child_page: ChildDatabaseFields,
+        child_database: ChildDatabaseFields,
     },
     Embed {
         embed: EmbedFields,

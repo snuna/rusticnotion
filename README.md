@@ -1,15 +1,17 @@
-# notion
-[![Build](https://github.com/jakeswenson/notion/actions/workflows/build.yml/badge.svg)](https://github.com/jakeswenson/notion/actions/workflows/build.yml)
-[![Crates.io](https://img.shields.io/crates/v/notion?style=for-the-badge)](https://crates.io/crates/notion)
+# rusticnotion
 
-Notion API client library for rust.
+[![Build](https://github.com/snuna/rusticnotion/actions/workflows/build.yml/badge.svg)](https://github.com/snuna/rusticnotion/actions/workflows/build.yml)
+[![Crates.io](https://img.shields.io/crates/v/rusticnotion?style=for-the-badge)](https://crates.io/crates/rusticnotion)
 
-This project is under active development and this README will be updated as this library gets closer to a reliable state.
-However, if you're really eager see the example todo cli application provided in [examples/todo](examples/todo).
+Notion Offical API client library for rust.
+
+Maintained fork, based on the awesome [jakeswenson/notion](https://github.com/jakeswenson/notion).
+
+Under active development.
 
 ## Docs
 
-The generated documentation site is available here: https://docs.rs/notion/
+The generated documentation site is available here: https://docs.rs/rusticnotion/
 
 ## Building
 
@@ -17,16 +19,26 @@ The generated documentation site is available here: https://docs.rs/notion/
 cargo build
 ```
 
-### Pull Request builds
-
-
-
 ## Testing
 
-We are in the process of moving to [wiremock](https://docs.rs/wiremock/latest/wiremock/) based notion api testing.
-Existing tests use a private notion org, and expect an environment variable set of `NOTION_API_TOKEN`.
+To run integration tests, a env variable of `NOTION_API_TOKEN` must be set.
+You can use the provided token in `example.env` by duplicating it to `.env`.
 
-We understand that right now this is a bit painful, but any help in this migration journey is very welcome!
+You can also create your own token [here](https://www.notion.so/my-integrations) with minimal permissions. And duplicating this [test page](https://snuna.notion.site/snuna/rusticnotion-test-b8b944b5cc3d444ea25ca7ddacd528cb) into your notion workspace. And then giving your integration only access to this page.
+
+NOTE: While making the integration tests more useful, the template will probably change a lot.
+
+```bash
+# Run all tests
+cargo test
+
+# Run tests with tracing enabled
+RUST_LOG=debug cargo test
+
+# Run tests without integration tests (offline)
+cargo test --lib
+
+```
 
 ## Contributing
 
@@ -34,5 +46,5 @@ Contributions are always welcome!
 If you have an idea, it's best to float it by us before working on it to ensure no effort is wasted.
 If there's already an open issue for it, knock yourself out.
 
-If you have any questions, feel free to use [Discussions](https://github.com/jakeswenson/notion/discussions).
+If you have any questions, feel free to use [Discussions](https://github.com/snuna/rusticnotion/discussions).
 Please don't hesitate to ask questions!

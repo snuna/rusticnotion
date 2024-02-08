@@ -387,7 +387,7 @@ mod tests {
 
         #[test]
         fn text_property_equals() -> Result<(), Box<dyn std::error::Error>> {
-            let json = serde_json::to_value(&FilterCondition::Property {
+            let json = serde_json::to_value(FilterCondition::Property {
                 property: "Name".to_string(),
                 condition: RichText(TextCondition::Equals("Test".to_string())),
             })?;
@@ -401,7 +401,7 @@ mod tests {
 
         #[test]
         fn text_property_contains() -> Result<(), Box<dyn std::error::Error>> {
-            let json = serde_json::to_value(&FilterCondition::Property {
+            let json = serde_json::to_value(FilterCondition::Property {
                 property: "Name".to_string(),
                 condition: RichText(TextCondition::Contains("Test".to_string())),
             })?;
@@ -415,7 +415,7 @@ mod tests {
 
         #[test]
         fn text_property_is_empty() -> Result<(), Box<dyn std::error::Error>> {
-            let json = serde_json::to_value(&FilterCondition::Property {
+            let json = serde_json::to_value(FilterCondition::Property {
                 property: "Name".to_string(),
                 condition: RichText(TextCondition::IsEmpty),
             })?;
@@ -429,7 +429,7 @@ mod tests {
 
         #[test]
         fn text_property_is_not_empty() -> Result<(), Box<dyn std::error::Error>> {
-            let json = serde_json::to_value(&FilterCondition::Property {
+            let json = serde_json::to_value(FilterCondition::Property {
                 property: "Name".to_string(),
                 condition: RichText(TextCondition::IsNotEmpty),
             })?;
@@ -443,7 +443,7 @@ mod tests {
 
         #[test]
         fn compound_query_and() -> Result<(), Box<dyn std::error::Error>> {
-            let json = serde_json::to_value(&FilterCondition::And {
+            let json = serde_json::to_value(FilterCondition::And {
                 and: vec![
                     FilterCondition::Property {
                         property: "Seen".to_string(),
@@ -470,7 +470,7 @@ mod tests {
 
         #[test]
         fn compound_query_or() -> Result<(), Box<dyn std::error::Error>> {
-            let json = serde_json::to_value(&FilterCondition::Or {
+            let json = serde_json::to_value(FilterCondition::Or {
                 or: vec![
                     FilterCondition::Property {
                         property: "Description".to_string(),

@@ -115,7 +115,6 @@ impl NotionApi {
     /// List all the databases shared with the supplied integration token.
     /// Because of the deprecation of the original endpoint this just calls
     /// [search()](Self::search()) with a filter on databases
-    ///
     #[deprecated(
         note = "This method is deprecated. Please use `search()` with a filter on databases instead."
     )]

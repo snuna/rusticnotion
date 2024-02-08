@@ -3,6 +3,9 @@ use crate::models::users::User;
 use crate::{Database, Page};
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum TextColor {

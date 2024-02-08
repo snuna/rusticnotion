@@ -3,8 +3,6 @@ pub mod error;
 pub mod paging;
 pub mod properties;
 pub mod search;
-#[cfg(test)]
-mod tests;
 pub mod text;
 pub mod users;
 
@@ -96,23 +94,6 @@ impl ListResponse<Object> {
             has_more: self.has_more,
             next_cursor: self.next_cursor,
         }
-    }
-
-    pub(crate) fn expect_databases(self) -> Result<ListResponse<Database>, crate::Error> {
-        let databases: Result<Vec<_>, _> = self
-            .results
-            .into_iter()
-            .map(|object| match object {
-                Object::Database { database } => Ok(database),
-                response => Err(Error::UnexpectedResponse { response }),
-            })
-            .collect();
-
-        Ok(ListResponse {
-            results: databases?,
-            has_more: self.has_more,
-            next_cursor: self.next_cursor,
-        })
     }
 
     pub(crate) fn expect_pages(self) -> Result<ListResponse<Page>, crate::Error> {
@@ -248,5 +229,27 @@ pub enum Object {
 impl Object {
     pub fn is_database(&self) -> bool {
         matches!(self, Object::Database { .. })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ListResponse, Object, Page};
+
+    #[test]
+    fn deserialize_page() {
+        let _page: Page = serde_json::from_str(include_str!("tests/page.json")).unwrap();
+    }
+
+    #[test]
+    fn deserialize_query_result() {
+        let _page: ListResponse<Page> =
+            serde_json::from_str(include_str!("tests/query_result.json")).unwrap();
+    }
+
+    #[test]
+    fn deserialize_number_format() {
+        let _search_results: ListResponse<Object> =
+            serde_json::from_str(include_str!("tests/issue_15.json")).unwrap();
     }
 }
