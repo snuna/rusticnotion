@@ -4,26 +4,8 @@ use crate::models::text::{
     Annotations, Link, MentionObject, RichText, RichTextCommon, Text, TextColor,
 };
 use crate::models::users::{Person, User, UserCommon};
-use crate::models::{ListResponse, Object, Page};
 use chrono::{DateTime, NaiveDate};
 use std::str::FromStr;
-
-#[test]
-fn deserialize_page() {
-    let _page: Page = serde_json::from_str(include_str!("tests/page.json")).unwrap();
-}
-
-#[test]
-fn deserialize_query_result() {
-    let _page: ListResponse<Page> =
-        serde_json::from_str(include_str!("tests/query_result.json")).unwrap();
-}
-
-#[test]
-fn deserialize_number_format() {
-    let _search_results: ListResponse<Object> =
-        serde_json::from_str(include_str!("tests/issue_15.json")).unwrap();
-}
 
 #[test]
 fn rich_text() {

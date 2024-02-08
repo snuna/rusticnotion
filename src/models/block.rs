@@ -5,6 +5,7 @@ use crate::ids::{AsIdentifier, BlockId, DatabaseId, PageId};
 use crate::models::text::{RichText, TextColor};
 use crate::models::users::UserCommon;
 
+#[cfg(test)]
 mod tests;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
