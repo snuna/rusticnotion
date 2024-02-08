@@ -4,6 +4,7 @@ use crate::models::search::{DatabaseQuery, SearchRequest};
 use crate::models::{Database, ListResponse, Object, Page};
 use ids::{AsIdentifier, PageId};
 use models::block::Block;
+use models::search::NotionSearch;
 use models::PageCreateRequest;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{header, Client, ClientBuilder, RequestBuilder};
@@ -112,15 +113,12 @@ impl NotionApi {
     }
 
     /// List all the databases shared with the supplied integration token.
-    /// > This method is apparently deprecated/"not recommended" and
-    /// > [search()](Self::search()) should be used instead.
+    /// Because of the deprecation of the original endpoint this just calls
+    /// [search()](Self::search()) with a filter on databases
     pub async fn list_databases(&self) -> Result<ListResponse<Database>, Error> {
-        let builder = self.client.get("https://api.notion.com/v1/databases");
-
-        match self.make_json_request(builder).await? {
-            Object::List { list } => Ok(list.expect_databases()?),
-            response => Err(Error::UnexpectedResponse { response }),
-        }
+        self.search(NotionSearch::filter_by_databases())
+            .await
+            .map(|response| response.only_databases())
     }
 
     /// Search all pages in notion.
