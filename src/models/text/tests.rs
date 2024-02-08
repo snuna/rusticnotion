@@ -66,7 +66,7 @@ fn rich_text_mention_user_person() {
             ),
           },
           person: Person {
-            email: "john.doe@gmail.com".to_string()
+            email: Some("john.doe@gmail.com".to_string())
           },
         }
       },
