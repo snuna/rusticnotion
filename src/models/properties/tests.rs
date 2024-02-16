@@ -78,3 +78,9 @@ fn parse_number_formula() {
     )
     .unwrap();
 }
+
+#[test]
+fn parse_phone_number_values() {
+    let _property: Vec<PropertyValue> =
+        serde_json::from_str(include_str!("tests/phone_number_property_value.json")).unwrap();
+}
