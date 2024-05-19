@@ -19,7 +19,7 @@ pub struct Bot {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "object", rename_all = "snake_case")]
 pub enum User {
     Person {
         #[serde(flatten)]
@@ -30,5 +30,10 @@ pub enum User {
         #[serde(flatten)]
         common: UserCommon,
         bot: Bot,
+    },
+    User {
+        #[serde(flatten)]
+        common: UserCommon,
+        person: Option<Person>,
     },
 }
