@@ -313,15 +313,28 @@ pub enum RollupValue {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
-pub struct FileReference {
-    pub name: String,
+#[serde(tag = "type")]
+#[serde(rename_all = "snake_case")]
+pub enum FileReference {
+    External { name: String, external: External },
+    File { name: String, file: File },
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+pub struct External {
     pub url: String,
-    pub mime_type: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+pub struct File {
+    pub url: String,
+    pub expiry_time: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
+
 pub enum PropertyValue {
     // <https://developers.notion.com/reference/property-object#title-configuration>
     Title {
