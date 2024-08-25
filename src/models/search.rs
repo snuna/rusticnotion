@@ -359,10 +359,19 @@ pub enum NotionSearch {
 }
 
 impl NotionSearch {
+    /// Convenience function for building a filter for `Database`s
     pub fn filter_by_databases() -> Self {
         Self::Filter {
             property: FilterProperty::Object,
             value: FilterValue::Database,
+        }
+    }
+
+    /// Convenience function for building a filter for `Page`s
+    pub fn filter_by_pages() -> Self {
+        Self::Filter {
+            property: FilterProperty::Object,
+            value: FilterValue::Page,
         }
     }
 }
