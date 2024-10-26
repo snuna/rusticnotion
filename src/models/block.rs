@@ -33,13 +33,13 @@ pub struct Text {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct InternalFileObject {
-    url: String,
-    expiry_time: DateTime<Utc>,
+    pub url: String,
+    pub expiry_time: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct ExternalFileObject {
-    url: String,
+    pub url: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
