@@ -43,10 +43,18 @@ pub struct ExternalFileObject {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+pub struct CustomEmojiObject {
+    pub id: String,
+    pub name: String,
+    pub url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
 pub enum FileOrEmojiObject {
     Emoji { emoji: String },
+    CustomEmoji { custom_emoji: CustomEmojiObject },
     File { file: InternalFileObject },
     External { external: ExternalFileObject },
 }
