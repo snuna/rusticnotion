@@ -9,6 +9,7 @@ pub mod users;
 use crate::models::properties::{PropertyConfiguration, PropertyValue};
 use crate::models::text::RichText;
 use crate::Error;
+use block::FileOrEmojiObject;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -39,6 +40,7 @@ pub struct Database {
     pub last_edited_time: DateTime<Utc>,
     /// Name of the database as it appears in Notion.
     pub title: Vec<RichText>,
+    pub icon: Option<FileOrEmojiObject>,
     /// Schema of properties for the database as they appear in Notion.
     //
     // key string
@@ -180,6 +182,7 @@ pub struct Page {
     pub last_edited_time: DateTime<Utc>,
     /// The archived status of the page.
     pub archived: bool,
+    pub icon: Option<FileOrEmojiObject>,
     pub properties: Properties,
     pub parent: Parent,
 }
