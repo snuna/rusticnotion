@@ -2,6 +2,7 @@ use test_log::test;
 mod common;
 use common::test_client;
 use rusticnotion::models::{
+    block::FileOrEmojiObject,
     search::{
         DatabaseQuery, FilterCondition, FilterProperty, FilterValue, NotionSearch,
         PropertyCondition, TextCondition,
@@ -61,9 +62,16 @@ async fn query_database() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Test expected to find at least one database in notion")
         .clone();
 
+    assert_eq!(
+        db.icon,
+        Some(FileOrEmojiObject::Emoji {
+            emoji: "🪑".to_string(),
+        })
+    );
+
     let pages = api
         .query_database(
-            db,
+            db.clone(),
             DatabaseQuery {
                 filter: Some(FilterCondition::Property {
                     property: "Name".to_string(),
@@ -77,6 +85,18 @@ async fn query_database() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     assert_eq!(pages.results().len(), 1);
+    assert_eq!(
+        pages.results()[0].icon,
+        Some(FileOrEmojiObject::Emoji {
+            emoji: "🌋".to_string(),
+        })
+    );
+
+    let pages = api.query_database(db, DatabaseQuery::default()).await?;
+
+    for page in pages.results() {
+        assert!(page.icon.is_some());
+    }
 
     Ok(())
 }

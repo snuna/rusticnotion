@@ -290,3 +290,9 @@ fn callout() {
         }
     )
 }
+
+#[test]
+fn parse_file_or_emoji_object() {
+    let _property: Vec<FileOrEmojiObject> =
+        serde_json::from_str(include_str!("tests/file_or_emoji_object.json")).unwrap();
+}

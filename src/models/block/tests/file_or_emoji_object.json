@@ -1,0 +1,27 @@
+[
+  {
+    "type": "emoji",
+    "emoji": "🌋"
+  },
+  {
+    "type": "custom_emoji",
+    "custom_emoji": {
+      "id": "12ba21d1-761a-80ae-9e66-007aa8231980",
+      "name": "snuna",
+      "url": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/4ea87798-345d-4e11-8511-7806f729e638/round.png"
+    }
+  },
+  {
+    "type": "external",
+    "external": {
+      "url": "https://example.com/image.png"
+    }
+  },
+  {
+    "type": "file",
+    "file": {
+      "url": "https://prod-files-secure.s3.us-west-2.amazonaws.com/7393c447-fdca-4bbd-88b8-f59667336fc3/7ecca519-8420-4eda-a5a4-55010114bed0/icon2.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45GO43JXI4%2F20241026%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20241026T113223Z&X-Amz-Expires=3600&X-Amz-Signature=b0e68c48947754ef871c4bbdadb9e8cdcca81d92bd5e1abdae7f3773fb87cfac&X-Amz-SignedHeaders=host&x-id=GetObject",
+      "expiry_time": "2024-10-26T12:32:23.112Z"
+    }
+  }
+]
