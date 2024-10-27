@@ -163,6 +163,20 @@ impl Properties {
             _ => None,
         })
     }
+
+    pub fn get_by_name(
+        &self,
+        name: &str,
+    ) -> Option<&PropertyValue> {
+        self.properties.get(name)
+    }
+
+    pub fn get_by_id(
+        &self,
+        id: &PropertyId,
+    ) -> Option<&PropertyValue> {
+        self.properties.values().find(|p| p.id() == id)
+    }
 }
 
 #[derive(Serialize, Debug, Eq, PartialEq)]
