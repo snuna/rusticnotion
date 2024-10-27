@@ -502,7 +502,7 @@ impl PropertyValue {
     ///
     /// This is useful if you know the type of the property you want to access and don't need match statements
     ///
-    /// ```rust,ignore
+    /// ```ignore
     /// let title = property.expect_value::<Vec<RichText>>().unwrap();
     /// ```
     /// This will fail if the actual property type is not compatible with the expected value type.
@@ -525,7 +525,7 @@ impl PropertyValue {
     ///
     /// For example if you want to access text property values always as a `String` without formatting you can do the following:
     ///
-    /// ```rust
+    /// ```ignore
     /// use rusticnotion::models::properties::{FromPropertyValue, PropertyValue, WrongPropertyTypeError}
     ///
     /// // We can use the new type pattern to create a custom type that implements FromPropertyValue
