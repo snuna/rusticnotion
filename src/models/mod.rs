@@ -10,6 +10,7 @@ use crate::models::properties::{PropertyConfiguration, PropertyValue};
 use crate::models::text::RichText;
 use crate::Error;
 use block::FileOrEmojiObject;
+use properties::PropertyValueData;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -156,8 +157,8 @@ pub struct Properties {
 
 impl Properties {
     pub fn title(&self) -> Option<String> {
-        self.properties.values().find_map(|p| match p {
-            PropertyValue::Title { title, .. } => {
+        self.properties.values().find_map(|p| match &p.data {
+            PropertyValueData::Title { title, .. } => {
                 Some(title.iter().map(|t| t.plain_text()).collect())
             }
             _ => None,
