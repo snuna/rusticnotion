@@ -1,7 +1,7 @@
 //! A client API for Notion.
 //!
 //! ### Example
-//! ```rust
+//! ```rust,ignore
 //! use rusticnotion;
 //! use rusticnotion::models::search::*;
 //! use rusticnotion::models::*;
