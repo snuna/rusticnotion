@@ -1,5 +1,5 @@
-use crate::models::properties::{DateOrDateTime, RollupPropertyValue, RollupValue};
-use crate::models::properties::{FormulaResultValue, PropertyValue};
+use crate::models::properties::FormulaResultValue;
+use crate::models::properties::{DateOrDateTime, PropertyValue, RollupPropertyValue, RollupValue};
 use chrono::NaiveDate;
 
 #[test]

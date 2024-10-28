@@ -1,3 +1,4 @@
+use std::convert::{TryFrom, TryInto};
 use std::fmt::{Display, Formatter};
 
 use crate::models::text::RichText;
@@ -10,6 +11,109 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
 mod tests;
+
+/// A property can exist together with an id or standalone as `PropertyValue`.
+/// This trait allows us to treat both cases the same way, when we don't care about the id.
+/// The `type_name` method is used to get the type of the property value as string, which is useful for error handling.
+pub trait Property {
+    fn value(&self) -> &PropertyValue;
+    fn type_name(&self) -> String;
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+pub struct PropertyWithId<T> {
+    pub id: PropertyId,
+    #[serde(flatten)]
+    pub value: T,
+}
+
+impl Property for PropertyWithId<PropertyValue> {
+    fn value(&self) -> &PropertyValue {
+        &self.value
+    }
+
+    fn type_name(&self) -> String {
+        self.value.type_name()
+    }
+}
+
+impl Property for PropertyValue {
+    fn value(&self) -> &PropertyValue {
+        self
+    }
+
+    fn type_name(&self) -> String {
+        match self {
+            PropertyValue::Title { .. } => "Title",
+            PropertyValue::Text { .. } => "Text",
+            PropertyValue::Number { .. } => "Number",
+            PropertyValue::Select { .. } => "Select",
+            PropertyValue::Status { .. } => "Status",
+            PropertyValue::MultiSelect { .. } => "MultiSelect",
+            PropertyValue::Date { .. } => "Date",
+            PropertyValue::People { .. } => "People",
+            PropertyValue::Files { .. } => "Files",
+            PropertyValue::Checkbox { .. } => "Checkbox",
+            PropertyValue::Url { .. } => "Url",
+            PropertyValue::Email { .. } => "Email",
+            PropertyValue::PhoneNumber { .. } => "PhoneNumber",
+            PropertyValue::Formula { .. } => "Formula",
+            PropertyValue::Relation { .. } => "Relation",
+            PropertyValue::Rollup { .. } => "Rollup",
+            PropertyValue::CreatedTime { .. } => "CreatedTime",
+            PropertyValue::CreatedBy { .. } => "CreatedBy",
+            PropertyValue::LastEditedTime { .. } => "LastEditedTime",
+            PropertyValue::LastEditedBy { .. } => "LastEditedBy",
+            PropertyValue::Button { .. } => "Button",
+        }
+        .to_string()
+    }
+}
+
+impl PropertyExpect for PropertyValue {}
+impl PropertyExpect for PropertyWithId<PropertyValue> {}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+#[serde(tag = "type")]
+#[serde(rename_all = "snake_case")]
+pub enum PropertyConfigurationData {
+    Title,
+    #[serde(rename = "rich_text")]
+    Text,
+    Number {
+        number: NumberDetails,
+    },
+    Select {
+        select: Select,
+    },
+    Status {
+        status: Status,
+    },
+    MultiSelect {
+        multi_select: Select,
+    },
+    Date,
+    People,
+    Files,
+    Checkbox,
+    Url,
+    Email,
+    PhoneNumber,
+    Formula {
+        formula: Formula,
+    },
+    Relation {
+        relation: Relation,
+    },
+    Rollup {
+        rollup: Rollup,
+    },
+    CreatedTime,
+    CreatedBy,
+    LastEditedTime,
+    LastEditBy,
+    Button,
+}
 
 /// How the number is displayed in Notion.
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, Hash)]
@@ -153,141 +257,69 @@ pub struct Rollup {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
-pub enum PropertyConfiguration {
-    /// Represents the special Title property required on every database.
-    /// See <https://developers.notion.com/reference/database#title-configuration>
+pub enum PropertyValue {
     Title {
-        id: PropertyId,
+        title: Vec<RichText>,
     },
-    /// Represents a Text property
-    /// <https://developers.notion.com/reference/database#text-configuration>
     #[serde(rename = "rich_text")]
     Text {
-        id: PropertyId,
+        rich_text: Vec<RichText>,
     },
-    /// Represents a Number Property
-    /// See <https://developers.notion.com/reference/database#number-configuration>
     Number {
-        id: PropertyId,
-        /// How the number is displayed in Notion.
-        number: NumberDetails,
+        number: Option<Number>,
     },
-    /// Represents a Select Property
-    /// See <https://developers.notion.com/reference/database#select-configuration>
     Select {
-        id: PropertyId,
-        select: Select,
+        select: Option<SelectedValue>,
     },
-    /// Represents a Status property
     Status {
-        id: PropertyId,
-        status: Status,
+        status: Option<SelectedValue>,
     },
-    /// Represents a Multi-select Property
-    /// See <https://developers.notion.com/reference/database#multi-select-configuration>
     MultiSelect {
-        id: PropertyId,
-        multi_select: Select,
+        multi_select: Option<Vec<SelectedValue>>,
     },
-    /// Represents a Date Property
-    /// See <https://developers.notion.com/reference/database#date-configuration>
     Date {
-        id: PropertyId,
+        date: Option<DateValue>,
     },
-    /// Represents a People Property
-    /// See <https://developers.notion.com/reference/database#people-configuration>
-    People {
-        id: PropertyId,
-    },
-    /// Represents a File Property
-    /// See <https://developers.notion.com/reference/database#file-configuration>
-    // Todo: File a bug with notion
-    //       Documentation issue: docs claim type name is `file` but it is in fact `files`
-    Files {
-        id: PropertyId,
-    },
-    /// Represents a Checkbox Property
-    /// See <https://developers.notion.com/reference/database#checkbox-configuration>
-    Checkbox {
-        id: PropertyId,
-    },
-    /// Represents a URL Property
-    /// See <https://developers.notion.com/reference/database#url-configuration>
-    Url {
-        id: PropertyId,
-    },
-    /// Represents a Email Property
-    /// See <https://developers.notion.com/reference/database#email-configuration>
-    Email {
-        id: PropertyId,
-    },
-    /// Represents a Phone number Property
-    /// See <https://developers.notion.com/reference/database#phone-number-configuration>
-    PhoneNumber {
-        id: PropertyId,
-    },
-    /// See <https://developers.notion.com/reference/database#formula-configuration>
     Formula {
-        id: PropertyId,
-        formula: Formula,
+        formula: FormulaResultValue,
     },
-    /// See <https://developers.notion.com/reference/database#relation-configuration>
     Relation {
-        id: PropertyId,
-        relation: Relation,
+        relation: Option<Vec<RelationValue>>,
     },
-    /// See <https://developers.notion.com/reference/database#rollup-configuration>
     Rollup {
-        id: PropertyId,
-        rollup: Rollup,
+        rollup: Option<RollupValue>,
     },
-    /// See <https://developers.notion.com/reference/database#created-time-configuration>
+    People {
+        people: Vec<User>,
+    },
+    Files {
+        files: Option<Vec<FileReference>>,
+    },
+    Checkbox {
+        checkbox: bool,
+    },
+    Url {
+        url: Option<String>,
+    },
+    Email {
+        email: Option<String>,
+    },
+    PhoneNumber {
+        phone_number: Option<String>,
+    },
     CreatedTime {
-        id: PropertyId,
+        created_time: DateTime<Utc>,
     },
-    /// See <https://developers.notion.com/reference/database#created-by-configuration>
     CreatedBy {
-        id: PropertyId,
+        created_by: User,
     },
-    /// See <https://developers.notion.com/reference/database#last-edited-time-configuration>
     LastEditedTime {
-        id: PropertyId,
+        last_edited_time: DateTime<Utc>,
     },
-    /// See <https://developers.notion.com/reference/database#last-edited-by-configuration>
-    LastEditBy {
-        id: PropertyId,
+    LastEditedBy {
+        last_edited_by: User,
     },
-
-    Button {
-        id: PropertyId,
-    },
-}
-impl PropertyConfiguration {
-    pub fn id(&self) -> &PropertyId {
-        match self {
-            PropertyConfiguration::Title { id } => id,
-            PropertyConfiguration::Text { id } => id,
-            PropertyConfiguration::Number { id, .. } => id,
-            PropertyConfiguration::Select { id, .. } => id,
-            PropertyConfiguration::Status { id, .. } => id,
-            PropertyConfiguration::MultiSelect { id, .. } => id,
-            PropertyConfiguration::Date { id } => id,
-            PropertyConfiguration::People { id } => id,
-            PropertyConfiguration::Files { id } => id,
-            PropertyConfiguration::Checkbox { id } => id,
-            PropertyConfiguration::Url { id } => id,
-            PropertyConfiguration::Email { id } => id,
-            PropertyConfiguration::PhoneNumber { id } => id,
-            PropertyConfiguration::Formula { id, .. } => id,
-            PropertyConfiguration::Relation { id, .. } => id,
-            PropertyConfiguration::Rollup { id, .. } => id,
-            PropertyConfiguration::CreatedTime { id } => id,
-            PropertyConfiguration::CreatedBy { id } => id,
-            PropertyConfiguration::LastEditedTime { id } => id,
-            PropertyConfiguration::LastEditBy { id } => id,
-            PropertyConfiguration::Button { id } => id,
-        }
-    }
+    Button,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
@@ -358,511 +390,6 @@ pub struct External {
 pub struct File {
     pub url: String,
     pub expiry_time: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
-#[serde(tag = "type")]
-#[serde(rename_all = "snake_case")]
-
-pub enum PropertyValue {
-    // <https://developers.notion.com/reference/property-object#title-configuration>
-    Title {
-        id: PropertyId,
-        title: Vec<RichText>,
-    },
-    /// <https://developers.notion.com/reference/property-object#text-configuration>
-    #[serde(rename = "rich_text")]
-    Text {
-        id: PropertyId,
-        rich_text: Vec<RichText>,
-    },
-    /// <https://developers.notion.com/reference/property-object#number-configuration>
-    Number {
-        id: PropertyId,
-        number: Option<Number>,
-    },
-    /// <https://developers.notion.com/reference/property-object#select-configuration>
-    Select {
-        id: PropertyId,
-        select: Option<SelectedValue>,
-    },
-    /// <https://developers.notion.com/reference/property-object#status-configuration>
-    Status {
-        id: PropertyId,
-        status: Option<SelectedValue>,
-    },
-    /// <https://developers.notion.com/reference/property-object#multi-select-configuration>
-    MultiSelect {
-        id: PropertyId,
-        multi_select: Option<Vec<SelectedValue>>,
-    },
-    /// <https://developers.notion.com/reference/property-object#date-configuration>
-    Date {
-        id: PropertyId,
-        date: Option<DateValue>,
-    },
-    /// <https://developers.notion.com/reference/property-object#formula-configuration>
-    Formula {
-        id: PropertyId,
-        formula: FormulaResultValue,
-    },
-    /// <https://developers.notion.com/reference/property-object#relation-configuration>
-    /// It is actually an array of relations
-    Relation {
-        id: PropertyId,
-        relation: Option<Vec<RelationValue>>,
-    },
-    /// <https://developers.notion.com/reference/property-object#rollup-configuration>
-    Rollup {
-        id: PropertyId,
-        rollup: Option<RollupValue>,
-    },
-    /// <https://developers.notion.com/reference/property-object#people-configuration>
-    People {
-        id: PropertyId,
-        people: Vec<User>,
-    },
-    /// <https://developers.notion.com/reference/property-object#files-configuration>
-    Files {
-        id: PropertyId,
-        files: Option<Vec<FileReference>>,
-    },
-    /// <https://developers.notion.com/reference/property-object#checkbox-configuration>
-    Checkbox {
-        id: PropertyId,
-        checkbox: bool,
-    },
-    /// <https://developers.notion.com/reference/property-object#url-configuration>
-    Url {
-        id: PropertyId,
-        url: Option<String>,
-    },
-    /// <https://developers.notion.com/reference/property-object#email-configuration>
-    Email {
-        id: PropertyId,
-        email: Option<String>,
-    },
-    /// <https://developers.notion.com/reference/property-object#phone-number-configuration>
-    PhoneNumber {
-        id: PropertyId,
-        phone_number: Option<String>,
-    },
-    /// <https://developers.notion.com/reference/property-object#created-time-configuration>
-    CreatedTime {
-        id: PropertyId,
-        created_time: DateTime<Utc>,
-    },
-    /// <https://developers.notion.com/reference/property-object#created-by-configuration>
-    CreatedBy {
-        id: PropertyId,
-        created_by: User,
-    },
-    /// <https://developers.notion.com/reference/property-object#last-edited-time-configuration>
-    LastEditedTime {
-        id: PropertyId,
-        last_edited_time: DateTime<Utc>,
-    },
-    /// <https://developers.notion.com/reference/property-object#last-edited-by-configuration>
-    LastEditedBy {
-        id: PropertyId,
-        last_edited_by: User,
-    },
-    Button {
-        id: PropertyId,
-    },
-}
-impl PropertyValue {
-    pub fn id(&self) -> &PropertyId {
-        match self {
-            PropertyValue::Title { id, .. } => id,
-            PropertyValue::Text { id, .. } => id,
-            PropertyValue::Number { id, .. } => id,
-            PropertyValue::Select { id, .. } => id,
-            PropertyValue::Status { id, .. } => id,
-            PropertyValue::MultiSelect { id, .. } => id,
-            PropertyValue::Date { id, .. } => id,
-            PropertyValue::People { id, .. } => id,
-            PropertyValue::Files { id, .. } => id,
-            PropertyValue::Checkbox { id, .. } => id,
-            PropertyValue::Url { id, .. } => id,
-            PropertyValue::Email { id, .. } => id,
-            PropertyValue::PhoneNumber { id, .. } => id,
-            PropertyValue::Formula { id, .. } => id,
-            PropertyValue::Relation { id, .. } => id,
-            PropertyValue::Rollup { id, .. } => id,
-            PropertyValue::CreatedTime { id, .. } => id,
-            PropertyValue::CreatedBy { id, .. } => id,
-            PropertyValue::LastEditedTime { id, .. } => id,
-            PropertyValue::LastEditedBy { id, .. } => id,
-            PropertyValue::Button { id } => id,
-        }
-    }
-
-    /// Allows for easy access to the property value.
-    ///
-    /// This is useful if you know the type of the property you want to access and don't need match statements
-    ///
-    /// ```ignore
-    /// let title = property.expect_value::<Vec<RichText>>().unwrap();
-    /// ```
-    /// This will fail if the actual property type is not compatible with the expected value type.
-    ///
-    /// See the following implementations of `FromPropertyValue` for supported types:
-    /// - [`Vec<RichText>`](PropertyValue::from_property_value::<Vec<RichText>>) for Title, Text
-    /// - [`Option<Number>`](PropertyValue::from_property_value::<Option<Number>>) for Number
-    /// - [`Option<SelectedValue>`](PropertyValue::from_property_value::<Option<SelectedValue>>) for Select, Status, MultiSelect
-    /// - [`Option<Vec<SelectedValue>>`](PropertyValue::from_property_value::<Option<Vec<SelectedValue>>>) for MultiSelect
-    /// - [`Option<DateValue>`](PropertyValue::from_property_value::<Option<DateValue>>) for Date
-    /// - [`Option<Vec<RelationValue>>`](PropertyValue::from_property_value::<Option<Vec<RelationValue>>>) for Relation
-    /// - [`Option<Vec<FileReference>>`](PropertyValue::from_property_value::<Option<Vec<FileReference>>>) for Files
-    /// - [`bool`](PropertyValue::from_property_value::<bool>) for Checkbox
-    /// - [`Option<String>`](PropertyValue::from_property_value::<Option<String>>) for Url, Email, PhoneNumber
-    /// - [`DateTime<Utc>`](PropertyValue::from_property_value::<DateTime<Utc>>) for CreatedTime, LastEditedTime
-    /// - [`User`](PropertyValue::from_property_value::<User>) for CreatedBy, LastEditedBy
-    ///
-    /// You can also create your own implementation of `FromPropertyValue` for custom types. This is useful if you
-    /// need to convert the property value to a specific type in your project.
-    ///
-    /// For example if you want to access text property values always as a `String` without formatting you can do the following:
-    ///
-    /// ```ignore
-    /// use rusticnotion::models::properties::{FromPropertyValue, PropertyValue, WrongPropertyTypeError}
-    ///
-    /// // We can use the new type pattern to create a custom type that implements FromPropertyValue
-    /// // This allows us easy access to property value in our desired type
-    /// struct TextValue(String);
-    /// impl FromPropertyValue for TextValue {
-    ///     fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
-    ///         match value {
-    ///             PropertyValue::Text { rich_text, .. } => {
-    ///                 let combined_text = rich_text
-    ///                     .iter()
-    ///                     .map(|rt| rt.plain_text().to_string())
-    ///                     .collect::<Vec<String>>()
-    ///                     .join("");
-    ///                 Ok(TextValue(combined_text))
-    ///             }
-    ///             _ => Err(WrongPropertyTypeError {
-    ///                 expected: vec!["Text".to_string()],
-    ///                 actual: value.type_name(),
-    ///             }),
-    ///         }
-    ///     }
-    /// }
-    /// assert_eq!(
-    ///     page.properties
-    ///         .get_by_name("Text")
-    ///         .unwrap()
-    ///         .expect_value::<TextValue>()
-    ///         .unwrap()
-    ///         .0,
-    ///     "hello world".to_string()
-    /// );
-    /// ```
-    pub fn expect_value<T: FromPropertyValue>(&self) -> Result<T, WrongPropertyTypeError> {
-        T::from_property_value(self.clone())
-    }
-
-    /// Allows for easy access to the title property value.
-    /// This is a shortcut for `expect_value::<Vec<RichText>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a title, even if `Vec<RichText>` is implemented for the property.
-    pub fn expect_title(&self) -> Result<Vec<RichText>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Title { .. } => self.expect_value::<Vec<RichText>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Title".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the text property value.
-    /// This is a shortcut for `expect_value::<Vec<RichText>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a text, even if `Vec<RichText>` is implemented for the property.
-    pub fn expect_text(&self) -> Result<Vec<RichText>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Text { .. } => self.expect_value::<Vec<RichText>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Text".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the number property value.
-    /// This is a shortcut for `expect_value::<Number>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a number, even if `Option<Number>` is implemented for the property.
-    pub fn expect_number(&self) -> Result<Option<Number>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Number { .. } => self.expect_value::<Option<Number>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Number".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the select property value.
-    /// This is a shortcut for `expect_value::<Option<SelectedValue>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a select, even if `Option<SelectedValue>` is implemented for the property.
-    pub fn expect_select(&self) -> Result<Option<SelectedValue>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Select { .. } => self.expect_value::<Option<SelectedValue>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Select".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the status property value.
-    /// This is a shortcut for `expect_value::<Option<SelectedValue>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a status, even if `Option<SelectedValue>` is implemented for the property.
-    pub fn expect_status(&self) -> Result<Option<SelectedValue>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Status { .. } => self.expect_value::<Option<SelectedValue>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Status".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the multi-select property value.
-    /// This is a shortcut for `expect_value::<Vec<SelectedValue>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a multi-select, even if `Option<Vec<SelectedValue>>` is implemented for the property.
-    pub fn expect_multi_select(
-        &self
-    ) -> Result<Option<Vec<SelectedValue>>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::MultiSelect { .. } => self.expect_value::<Option<Vec<SelectedValue>>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["MultiSelect".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the date property value.
-    /// This is a shortcut for `expect_value::<Option<DateValue>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a date, even if `Option<DateValue>` is implemented for the property.
-    pub fn expect_date(&self) -> Result<Option<DateValue>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Date { .. } => self.expect_value::<Option<DateValue>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Date".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the people property value.
-    /// This is a shortcut for `expect_value::<Vec<User>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a people, even if `Option<Vec<User>>` is implemented for the property.
-    pub fn expect_people(&self) -> Result<Option<Vec<User>>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::People { .. } => self.expect_value::<Option<Vec<User>>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["People".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the files property value.
-    /// This is a shortcut for `expect_value::<Option<Vec<FileReference>>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a files, even if `Option<Vec<FileReference>>` is implemented for the property.
-    pub fn expect_files(&self) -> Result<Option<Vec<FileReference>>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Files { .. } => self.expect_value::<Option<Vec<FileReference>>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Files".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the checkbox property value.
-    /// This is a shortcut for `expect_value::<bool>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a checkbox, even if `bool` is implemented for the property.
-    pub fn expect_checkbox(&self) -> Result<bool, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Checkbox { .. } => self.expect_value::<bool>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Checkbox".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the url property value.
-    /// This is a shortcut for `expect_value::<Option<String>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a url, even if `Option<String>` is implemented for the property.
-    pub fn expect_url(&self) -> Result<Option<String>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Url { .. } => self.expect_value::<Option<String>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Url".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the email property value.
-    /// This is a shortcut for `expect_value::<Option<String>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not an email, even if `Option<String>` is implemented for the property.
-    pub fn expect_email(&self) -> Result<Option<String>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Email { .. } => self.expect_value::<Option<String>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Email".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the phone number property value.
-    /// This is a shortcut for `expect_value::<Option<String>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a phone number, even if `Option<String>` is implemented for the property.
-    pub fn expect_phone_number(&self) -> Result<Option<String>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::PhoneNumber { .. } => self.expect_value::<Option<String>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["PhoneNumber".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the formula property value.
-    /// This is a shortcut for `expect_value::<FormulaResultValue>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a formula, even if `FormulaResultValue` is implemented for the property.
-    pub fn expect_formula(&self) -> Result<FormulaResultValue, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Formula { .. } => self.expect_value::<FormulaResultValue>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Formula".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the relation property value.
-    /// This is a shortcut for `expect_value::<Option<Vec<RelationValue>>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a relation, even if `Option<Vec<RelationValue>>` is implemented for the property.
-    pub fn expect_relation(&self) -> Result<Option<Vec<RelationValue>>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Relation { .. } => self.expect_value::<Option<Vec<RelationValue>>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Relation".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the rollup property value.
-    /// This is a shortcut for `expect_value::<Option<RollupValue>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a rollup, even if `Option<RollupValue>` is implemented for the property.
-    pub fn expect_rollup(&self) -> Result<Option<RollupValue>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Rollup { .. } => self.expect_value::<Option<RollupValue>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Rollup".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the created time property value.
-    /// This is a shortcut for `expect_value::<DateTime<Utc>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a created time, even if `DateTime<Utc>` is implemented for the property.
-    pub fn expect_created_time(&self) -> Result<DateTime<Utc>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::CreatedTime { .. } => self.expect_value::<DateTime<Utc>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["CreatedTime".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the created by property value.
-    /// This is a shortcut for `expect_value::<User>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a created by, even if `User` is implemented for the property.
-    pub fn expect_created_by(&self) -> Result<User, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::CreatedBy { .. } => self.expect_value::<User>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["CreatedBy".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the last edited time property value.
-    /// This is a shortcut for `expect_value::<DateTime<Utc>>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a last edited time, even if `DateTime<Utc>` is implemented for the property.
-    pub fn expect_last_edited_time(&self) -> Result<DateTime<Utc>, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::LastEditedTime { .. } => self.expect_value::<DateTime<Utc>>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["LastEditedTime".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the last edited by property value.
-    /// This is a shortcut for `expect_value::<User>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a last edited by, even if `User` is implemented for the property.
-    pub fn expect_last_edited_by(&self) -> Result<User, WrongPropertyTypeError> {
-        match self {
-            PropertyValue::LastEditedBy { .. } => self.expect_value::<User>(),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["LastEditedBy".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    /// Allows for easy access to the button property value.
-    /// This is a shortcut for `expect_value::<()>()` which is more explicit about the expected property type.
-    /// This will also return an error if the property is not a button, even if `()` is implemented for the property.
-    pub fn expect_button(&self) -> Result<(), WrongPropertyTypeError> {
-        match self {
-            PropertyValue::Button { .. } => Ok(()),
-            _ => Err(WrongPropertyTypeError {
-                expected: vec!["Button".to_string()],
-                actual: self.type_name(),
-            }),
-        }
-    }
-
-    pub fn type_name(&self) -> String {
-        match self {
-            PropertyValue::Title { .. } => "Title".to_string(),
-            PropertyValue::Text { .. } => "Text".to_string(),
-            PropertyValue::Number { .. } => "Number".to_string(),
-            PropertyValue::Select { .. } => "Select".to_string(),
-            PropertyValue::Status { .. } => "Status".to_string(),
-            PropertyValue::MultiSelect { .. } => "MultiSelect".to_string(),
-            PropertyValue::Date { .. } => "Date".to_string(),
-            PropertyValue::People { .. } => "People".to_string(),
-            PropertyValue::Files { .. } => "Files".to_string(),
-            PropertyValue::Checkbox { .. } => "Checkbox".to_string(),
-            PropertyValue::Url { .. } => "Url".to_string(),
-            PropertyValue::Email { .. } => "Email".to_string(),
-            PropertyValue::PhoneNumber { .. } => "PhoneNumber".to_string(),
-            PropertyValue::Formula { .. } => "Formula".to_string(),
-            PropertyValue::Relation { .. } => "Relation".to_string(),
-            PropertyValue::Rollup { .. } => "Rollup".to_string(),
-            PropertyValue::CreatedTime { .. } => "CreatedTime".to_string(),
-            PropertyValue::CreatedBy { .. } => "CreatedBy".to_string(),
-            PropertyValue::LastEditedTime { .. } => "LastEditedTime".to_string(),
-            PropertyValue::LastEditedBy { .. } => "LastEditedBy".to_string(),
-            PropertyValue::Button { .. } => "Button".to_string(),
-        }
-    }
 }
 
 /// <https://developers.notion.com/reference/page#rollup-property-value-element>
@@ -937,6 +464,349 @@ pub enum RollupPropertyValue {
     },
 }
 
+pub trait PropertyExpect: Property {
+    /// Allows for easy access to the property value.
+    ///
+    /// This is useful if you know the type of the property you want to access and don't need match statements
+    ///
+    /// ```ignore
+    /// let title = property.expect_value::<Vec<RichText>>().unwrap();
+    /// ```
+    /// This will fail if the actual property type is not compatible with the expected value type.
+    ///
+    /// See the following implementations of `TryFrom<PropertyValue>` for supported types:
+    /// - `Vec<RichText>` for Title, Text
+    /// - `Option<Number>` for Number
+    /// - `Option<SelectedValue>` for Select, Status
+    /// - `Option<Vec<SelectedValue>>` for MultiSelect
+    /// - `Option<DateValue>` for Date
+    /// - `Option<Vec<RelationValue>>` for Relation
+    /// - `Option<Vec<FileReference>>` for Files
+    /// - `bool` for Checkbox
+    /// - `Option<String>` for Url, Email, PhoneNumber
+    /// - `DateTime<Utc>` for CreatedTime, LastEditedTime
+    /// - `User` for CreatedBy, LastEditedBy
+    ///
+    /// You can also create your own implementation of `TryFrom<PropertyValue>` for custom types. This is useful if you
+    /// need to convert the property value to a specific type in your project.
+    ///
+    /// For example if you want to access text property values always as a `String` without formatting you can do the following:
+    ///
+    /// ```ignore
+    /// use rusticnotion::models::properties::{Property, PropertyExpect, PropertyValue, WrongPropertyTypeError}
+    ///
+    /// struct TextValue(String);
+    /// impl TryFrom<PropertyValue> for TextValue {
+    ///     type Error = WrongPropertyTypeError;
+    ///
+    ///     fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
+    ///         match value {
+    ///             PropertyValue::Text { rich_text, .. } => {
+    ///                   let combined_text = rich_text
+    ///                       .iter()
+    ///                       .map(|rt| rt.plain_text().to_string())
+    ///                       .collect::<Vec<String>>()
+    ///                       .join("");
+    ///                   Ok(TextValue(combined_text))
+    ///               }
+    ///               _ => Err(WrongPropertyTypeError {
+    ///                   expected: vec!["Text".to_string()],
+    ///                   actual: value.type_name(),
+    ///               }),
+    ///           }
+    ///     }
+    ///}
+    /// assert_eq!(
+    ///     page.properties
+    ///         .get_by_name("Text")
+    ///         .unwrap()
+    ///         .expect_value::<TextValue>()
+    ///         .unwrap()
+    ///         .0,
+    ///     "hello world".to_string()
+    /// );
+    /// ```
+    fn expect_value<T>(&self) -> Result<T, WrongPropertyTypeError>
+    where
+        T: TryFrom<PropertyValue, Error = WrongPropertyTypeError>,
+    {
+        self.value().to_owned().try_into()
+    }
+
+    /// Allows for easy access to the title property value.
+    /// This is a shortcut for `expect_value::<Vec<RichText>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a title, even if `Vec<RichText>` is implemented for the property.
+    fn expect_title(&self) -> Result<Vec<RichText>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Title { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Title".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the text property value.
+    /// This is a shortcut for `expect_value::<Vec<RichText>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a text, even if `Vec<RichText>` is implemented for the property.
+    fn expect_text(&self) -> Result<Vec<RichText>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Text { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Text".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the number property value.
+    /// This is a shortcut for `expect_value::<Number>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a number, even if `Option<Number>` is implemented for the property.
+    fn expect_number(&self) -> Result<Option<Number>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Number { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Number".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the select property value.
+    /// This is a shortcut for `expect_value::<Option<SelectedValue>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a select, even if `Option<SelectedValue>` is implemented for the property.
+    fn expect_select(&self) -> Result<Option<SelectedValue>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Select { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Select".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the status property value.
+    /// This is a shortcut for `expect_value::<Option<SelectedValue>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a status, even if `Option<SelectedValue>` is implemented for the property.
+    fn expect_status(&self) -> Result<Option<SelectedValue>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Status { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Status".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the multi-select property value.
+    /// This is a shortcut for `expect_value::<Vec<SelectedValue>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a multi-select, even if `Option<Vec<SelectedValue>>` is implemented for the property.
+    fn expect_multi_select(&self) -> Result<Option<Vec<SelectedValue>>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::MultiSelect { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["MultiSelect".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the date property value.
+    /// This is a shortcut for `expect_value::<Option<DateValue>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a date, even if `Option<DateValue>` is implemented for the property.
+    fn expect_date(&self) -> Result<Option<DateValue>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Date { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Date".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the people property value.
+    /// This is a shortcut for `expect_value::<Vec<User>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a people, even if `Option<Vec<User>>` is implemented for the property.
+    fn expect_people(&self) -> Result<Option<Vec<User>>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::People { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["People".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the files property value.
+    /// This is a shortcut for `expect_value::<Option<Vec<FileReference>>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a files, even if `Option<Vec<FileReference>>` is implemented for the property.
+    fn expect_files(&self) -> Result<Option<Vec<FileReference>>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Files { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Files".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the checkbox property value.
+    /// This is a shortcut for `expect_value::<bool>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a checkbox, even if `bool` is implemented for the property.
+    fn expect_checkbox(&self) -> Result<bool, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Checkbox { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Checkbox".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the url property value.
+    /// This is a shortcut for `expect_value::<Option<String>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a url, even if `Option<String>` is implemented for the property.
+    fn expect_url(&self) -> Result<Option<String>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Url { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Url".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the email property value.
+    /// This is a shortcut for `expect_value::<Option<String>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not an email, even if `Option<String>` is implemented for the property.
+    fn expect_email(&self) -> Result<Option<String>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Email { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Email".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the phone number property value.
+    /// This is a shortcut for `expect_value::<Option<String>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a phone number, even if `Option<String>` is implemented for the property.
+    fn expect_phone_number(&self) -> Result<Option<String>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::PhoneNumber { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["PhoneNumber".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the formula property value.
+    /// This is a shortcut for `expect_value::<FormulaResultValue>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a formula, even if `FormulaResultValue` is implemented for the property.
+    fn expect_formula(&self) -> Result<FormulaResultValue, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Formula { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Formula".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the relation property value.
+    /// This is a shortcut for `expect_value::<Option<Vec<RelationValue>>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a relation, even if `Option<Vec<RelationValue>>` is implemented for the property.
+    fn expect_relation(&self) -> Result<Option<Vec<RelationValue>>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Relation { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Relation".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the rollup property value.
+    /// This is a shortcut for `expect_value::<Option<RollupValue>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a rollup, even if `Option<RollupValue>` is implemented for the property.
+    fn expect_rollup(&self) -> Result<Option<RollupValue>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Rollup { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Rollup".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the created time property value.
+    /// This is a shortcut for `expect_value::<DateTime<Utc>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a created time, even if `DateTime<Utc>` is implemented for the property.
+    fn expect_created_time(&self) -> Result<DateTime<Utc>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::CreatedTime { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["CreatedTime".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the created by property value.
+    /// This is a shortcut for `expect_value::<User>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a created by, even if `User` is implemented for the property.
+    fn expect_created_by(&self) -> Result<User, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::CreatedBy { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["CreatedBy".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the last edited time property value.
+    /// This is a shortcut for `expect_value::<DateTime<Utc>>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a last edited time, even if `DateTime<Utc>` is implemented for the property.
+    fn expect_last_edited_time(&self) -> Result<DateTime<Utc>, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::LastEditedTime { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["LastEditedTime".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the last edited by property value.
+    /// This is a shortcut for `expect_value::<User>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a last edited by, even if `User` is implemented for the property.
+    fn expect_last_edited_by(&self) -> Result<User, WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::LastEditedBy { .. } => self.value().to_owned().try_into(),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["LastEditedBy".to_string()],
+                actual: self.type_name(),
+            }),
+        }
+    }
+
+    /// Allows for easy access to the button property value.
+    /// This is a shortcut for `expect_value::<()>()` which is more explicit about the expected property type.
+    /// This will also return an error if the property is not a button, even if `()` is implemented for the property.
+    fn expect_button(&self) -> Result<(), WrongPropertyTypeError> {
+        match self.value() {
+            PropertyValue::Button { .. } => Ok(()),
+            _ => Err(WrongPropertyTypeError {
+                expected: vec!["Button".to_string()],
+                actual: self.type_name().to_string(),
+            }),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone)]
 pub struct WrongPropertyTypeError {
     pub expected: Vec<String>,
@@ -957,11 +827,13 @@ impl Display for WrongPropertyTypeError {
 }
 
 pub trait FromPropertyValue: Sized {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError>;
+    fn from_property_value(property: impl Property) -> Result<Self, WrongPropertyTypeError>;
 }
 
-impl FromPropertyValue for Vec<RichText> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Vec<RichText> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Title { title, .. } => Ok(title),
             PropertyValue::Text { rich_text, .. } => Ok(rich_text),
@@ -973,8 +845,10 @@ impl FromPropertyValue for Vec<RichText> {
     }
 }
 
-impl FromPropertyValue for Option<Number> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<Number> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Number { number, .. } => Ok(number),
             _ => Err(WrongPropertyTypeError {
@@ -985,8 +859,10 @@ impl FromPropertyValue for Option<Number> {
     }
 }
 
-impl FromPropertyValue for Option<SelectedValue> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<SelectedValue> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Select { select, .. } => Ok(select),
             PropertyValue::Status { status, .. } => Ok(status),
@@ -998,8 +874,10 @@ impl FromPropertyValue for Option<SelectedValue> {
     }
 }
 
-impl FromPropertyValue for Option<Vec<SelectedValue>> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<Vec<SelectedValue>> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::MultiSelect { multi_select, .. } => Ok(multi_select),
             _ => Err(WrongPropertyTypeError {
@@ -1010,8 +888,10 @@ impl FromPropertyValue for Option<Vec<SelectedValue>> {
     }
 }
 
-impl FromPropertyValue for Option<DateValue> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<DateValue> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Date { date, .. } => Ok(date),
             _ => Err(WrongPropertyTypeError {
@@ -1022,8 +902,10 @@ impl FromPropertyValue for Option<DateValue> {
     }
 }
 
-impl FromPropertyValue for FormulaResultValue {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for FormulaResultValue {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Formula { formula, .. } => Ok(formula),
             _ => Err(WrongPropertyTypeError {
@@ -1034,8 +916,10 @@ impl FromPropertyValue for FormulaResultValue {
     }
 }
 
-impl FromPropertyValue for Option<Vec<RelationValue>> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<Vec<RelationValue>> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Relation { relation, .. } => Ok(relation),
             _ => Err(WrongPropertyTypeError {
@@ -1046,8 +930,10 @@ impl FromPropertyValue for Option<Vec<RelationValue>> {
     }
 }
 
-impl FromPropertyValue for Option<Vec<FileReference>> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<Vec<FileReference>> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Files { files, .. } => Ok(files),
             _ => Err(WrongPropertyTypeError {
@@ -1058,8 +944,10 @@ impl FromPropertyValue for Option<Vec<FileReference>> {
     }
 }
 
-impl FromPropertyValue for bool {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for bool {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Checkbox { checkbox, .. } => Ok(checkbox),
             _ => Err(WrongPropertyTypeError {
@@ -1070,8 +958,10 @@ impl FromPropertyValue for bool {
     }
 }
 
-impl FromPropertyValue for Option<String> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<String> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Url { url, .. } => Ok(url),
             PropertyValue::Email { email, .. } => Ok(email),
@@ -1088,8 +978,10 @@ impl FromPropertyValue for Option<String> {
     }
 }
 
-impl FromPropertyValue for DateTime<Utc> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for DateTime<Utc> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::CreatedTime { created_time, .. } => Ok(created_time),
             PropertyValue::LastEditedTime {
@@ -1103,8 +995,10 @@ impl FromPropertyValue for DateTime<Utc> {
     }
 }
 
-impl FromPropertyValue for User {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for User {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::CreatedBy { created_by, .. } => Ok(created_by),
             PropertyValue::LastEditedBy { last_edited_by, .. } => Ok(last_edited_by),
@@ -1116,8 +1010,10 @@ impl FromPropertyValue for User {
     }
 }
 
-impl FromPropertyValue for Option<Vec<User>> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<Vec<User>> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::People { people, .. } => Ok(Some(people)),
             _ => Err(WrongPropertyTypeError {
@@ -1128,8 +1024,10 @@ impl FromPropertyValue for Option<Vec<User>> {
     }
 }
 
-impl FromPropertyValue for Option<RollupValue> {
-    fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
+impl TryFrom<PropertyValue> for Option<RollupValue> {
+    type Error = WrongPropertyTypeError;
+
+    fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
         match value {
             PropertyValue::Rollup { rollup, .. } => Ok(rollup),
             _ => Err(WrongPropertyTypeError {
