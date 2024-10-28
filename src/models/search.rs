@@ -334,6 +334,7 @@ impl Pageable for DatabaseQuery {
     }
 }
 
+/// Parameters for search
 #[derive(Debug, Eq, PartialEq)]
 pub enum NotionSearch {
     /// When supplied, limits which pages are returned by comparing the query to the page title.

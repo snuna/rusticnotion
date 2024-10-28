@@ -2,7 +2,7 @@
 
 This example is builds a todo list using a notion database.
 
-## Setup your notion api token
+## Setup your Notion API token
 
 Create an `internal` integration here: https://www.notion.so/my-integrations
 

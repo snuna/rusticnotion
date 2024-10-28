@@ -1,9 +1,13 @@
+//! Identification types, traits and utilities.
+//! 
 use std::fmt::Display;
 use std::fmt::Error;
 
+/// A wrapper for arbitrary identification types
 pub trait Identifier: Display {
     fn value(&self) -> &str;
 }
+
 /// Meant to be a helpful trait allowing anything that can be
 /// identified by the type specified in `ById`.
 pub trait AsIdentifier<ById: Identifier> {

@@ -1,3 +1,23 @@
+//! A client API for Notion.
+//!
+//! ### Example
+//! ```rust,ignore
+//! use rusticnotion;
+//! use rusticnotion::models::search::*;
+//! use rusticnotion::models::*;
+//! use std::env;
+//! let notion_api_token = env::var("NOTION_API_TOKEN").expect("NOTION_API_TOKEN env var not set");
+//! let notion = rusticnotion::NotionApi::new(notion_api_token).unwrap();
+//!
+//! // List all databases
+//! let databases = notion.search(NotionSearch::filter_by_databases()).await.unwrap();
+//!
+//! // List all pages
+//! let pages = notion.search(NotionSearch::filter_by_pages()).await.unwrap();
+//!
+//! // See examples for more
+//! ```
+
 use crate::ids::{BlockId, DatabaseId};
 use crate::models::error::ErrorResponse;
 use crate::models::search::{DatabaseQuery, SearchRequest};
