@@ -1,9 +1,11 @@
+use std::convert::TryFrom;
+
 use test_log::test;
 mod common;
 use common::test_client;
 use rusticnotion::models::{
     block::FileOrEmojiObject,
-    properties::{FromPropertyValue, PropertyValue, PropertyValueData, WrongPropertyTypeError},
+    properties::{Property, PropertyExpect, PropertyValue, WrongPropertyTypeError},
     search::{
         DatabaseQuery, FilterCondition, FilterProperty, FilterValue, NotionSearch,
         PropertyCondition, TextCondition,
@@ -94,13 +96,13 @@ async fn query_database() -> Result<(), Box<dyn std::error::Error>> {
         })
     );
 
-    // We can use the new type pattern to create a custom type that implements FromPropertyValue
-    // This allows us easy access to property value in our desired type
     struct TextValue(String);
-    impl FromPropertyValue for TextValue {
-        fn from_property_value(value: PropertyValue) -> Result<Self, WrongPropertyTypeError> {
-            match value.data {
-                PropertyValueData::Text { rich_text, .. } => {
+    impl TryFrom<PropertyValue> for TextValue {
+        type Error = WrongPropertyTypeError;
+
+        fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
+            match value {
+                PropertyValue::Text { rich_text, .. } => {
                     let combined_text = rich_text
                         .iter()
                         .map(|rt| rt.plain_text().to_string())

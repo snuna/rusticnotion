@@ -1,7 +1,5 @@
-use crate::models::properties::{
-    DateOrDateTime, PropertyValueData, RollupPropertyValue, RollupValue,
-};
-use crate::models::properties::{FormulaResultValue, PropertyValue};
+use crate::models::properties::FormulaResultValue;
+use crate::models::properties::{DateOrDateTime, PropertyValue, RollupPropertyValue, RollupValue};
 use chrono::NaiveDate;
 
 #[test]
@@ -42,17 +40,17 @@ fn parse_rollup_property() {
         serde_json::from_str(include_str!("tests/rollup_property.json")).unwrap();
 
     assert!(matches!(
-        property.data,
-        PropertyValueData::Rollup {
+        property,
+        PropertyValue::Rollup {
             rollup: Some(RollupValue::Array { .. }),
             ..
         }
     ));
 
-    if let PropertyValueData::Rollup {
+    if let PropertyValue::Rollup {
         rollup: Some(RollupValue::Array { array }),
         ..
-    } = property.data
+    } = property
     {
         assert!(matches!(array[0], RollupPropertyValue::Text { .. }))
     }
