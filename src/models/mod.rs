@@ -9,7 +9,7 @@ pub mod users;
 use crate::models::properties::PropertyValue;
 use crate::models::text::RichText;
 use crate::Error;
-use block::FileOrEmojiObject;
+use block::{ExternalFileObject, FileOrEmojiObject};
 use properties::{PropertyConfigurationData, PropertyWithId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -157,7 +157,7 @@ pub struct Properties {
 
 /// A struct that contains only the data of the properties without the id for create and update requests.
 /// The key can either be the name or the id of the property.
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct PropertiesWithoutIds {
     #[serde(flatten)]
     pub properties: HashMap<String, PropertyValue>,
@@ -221,8 +221,11 @@ pub struct Page {
     /// The archived status of the page.
     pub archived: bool,
     pub icon: Option<FileOrEmojiObject>,
+    pub cover: Option<ExternalFileObject>,
     pub properties: Properties,
     pub parent: Parent,
+    pub url: String,
+    pub public_url: Option<String>,
 }
 
 impl Page {

@@ -44,7 +44,7 @@ pub struct Annotations {
 
 /// Properties common on all rich text objects
 /// See <https://developers.notion.com/reference/rich-text#all-rich-text>
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct RichTextCommon {
     pub plain_text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
