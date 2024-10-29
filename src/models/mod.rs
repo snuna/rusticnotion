@@ -9,7 +9,7 @@ pub mod users;
 use crate::models::properties::PropertyValue;
 use crate::models::text::RichText;
 use crate::Error;
-use block::{ExternalFileObject, FileOrEmojiObject};
+use block::{ExternalFileObject, FileObject, FileOrEmojiObject};
 use properties::{PropertyConfigurationData, PropertyWithId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -221,7 +221,7 @@ pub struct Page {
     /// The archived status of the page.
     pub archived: bool,
     pub icon: Option<FileOrEmojiObject>,
-    pub cover: Option<ExternalFileObject>,
+    pub cover: Option<FileObject>,
     pub properties: Properties,
     pub parent: Parent,
     pub url: String,
