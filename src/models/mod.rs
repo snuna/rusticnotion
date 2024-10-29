@@ -224,7 +224,7 @@ pub struct Page {
     pub cover: Option<ExternalFileObject>,
     pub properties: Properties,
     pub parent: Parent,
-    pub url: Option<String>,
+    pub url: String,
     pub public_url: Option<String>,
 }
 
