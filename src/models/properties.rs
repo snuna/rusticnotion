@@ -328,7 +328,8 @@ pub struct SelectedValue {
     pub id: Option<SelectOptionId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    pub color: Color,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<Color>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
