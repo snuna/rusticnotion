@@ -5,7 +5,7 @@ use crate::models::{Database, ListResponse, Object, Page};
 use ids::{AsIdentifier, PageId};
 use models::block::Block;
 use models::search::NotionSearch;
-use models::PageCreateRequest;
+use models::{PageCreateRequest, PropertyUpdateRequest};
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{header, Client, ClientBuilder, RequestBuilder};
 use tracing::Instrument;
@@ -191,6 +191,30 @@ impl NotionApi {
                 self.client
                     .post("https://api.notion.com/v1/pages")
                     .json(&page.into()),
+            )
+            .await?;
+
+        match result {
+            Object::Page { page } => Ok(page),
+            response => Err(Error::UnexpectedResponse { response }),
+        }
+    }
+
+    /// Updates the properties of a page in a database. Returns back the updated page.
+    /// https://developers.notion.com/reference/patch-page
+    pub async fn update_page_properties<T: AsIdentifier<PageId>, U: Into<PropertyUpdateRequest>>(
+        &self,
+        page_id: T,
+        properties: U,
+    ) -> Result<Page, Error> {
+        let result = self
+            .make_json_request(
+                self.client
+                    .patch(format!(
+                        "https://api.notion.com/v1/pages/{}",
+                        page_id.as_id()
+                    ))
+                    .json(&properties.into()),
             )
             .await?;
 

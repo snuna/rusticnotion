@@ -196,6 +196,21 @@ pub struct PageCreateRequest {
     pub children: Option<Vec<CreateBlock>>,
 }
 
+#[derive(Serialize, Debug, Eq, PartialEq, Default)]
+pub struct PropertyUpdateRequest {
+    /// The property values to update for the page. The keys are the names or IDs of the property and the values are property values. If a page property ID is not included, then it is not changed.
+    pub properties: PropertiesWithoutIds,
+    /// Set to true to delete a block. Set to false to restore a block.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub in_trash: Option<bool>,
+    /// A page icon for the page. Supported types are external file object or emoji object.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<FileOrEmojiObject>,
+    /// A cover image for the page. Only external file objects are supported.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover: Option<ExternalFileObject>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct Page {
     pub id: PageId,
