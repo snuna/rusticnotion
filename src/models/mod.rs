@@ -6,14 +6,15 @@ pub mod search;
 pub mod text;
 pub mod users;
 
-use crate::models::properties::{PropertyConfiguration, PropertyValue};
+use crate::models::properties::PropertyValue;
 use crate::models::text::RichText;
 use crate::Error;
 use block::FileOrEmojiObject;
+use properties::{PropertyConfigurationData, PropertyWithId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::ids::{AsIdentifier, DatabaseId, PageId};
+use crate::ids::{AsIdentifier, DatabaseId, PageId, PropertyId};
 use crate::models::block::{Block, CreateBlock};
 use crate::models::error::ErrorResponse;
 use crate::models::paging::PagingCursor;
@@ -48,7 +49,7 @@ pub struct Database {
     //
     // value object
     // A Property object.
-    pub properties: HashMap<String, PropertyConfiguration>,
+    pub properties: HashMap<String, PropertyWithId<PropertyConfigurationData>>,
 }
 
 impl AsIdentifier<DatabaseId> for Database {
@@ -151,24 +152,46 @@ pub enum Parent {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct Properties {
     #[serde(flatten)]
+    pub properties: HashMap<String, PropertyWithId<PropertyValue>>,
+}
+
+/// A struct that contains only the data of the properties without the id for create and update requests.
+/// The key can either be the name or the id of the property.
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+pub struct PropertiesWithoutIds {
+    #[serde(flatten)]
     pub properties: HashMap<String, PropertyValue>,
 }
 
 impl Properties {
     pub fn title(&self) -> Option<String> {
-        self.properties.values().find_map(|p| match p {
+        self.properties.values().find_map(|p| match &p.value {
             PropertyValue::Title { title, .. } => {
                 Some(title.iter().map(|t| t.plain_text()).collect())
             }
             _ => None,
         })
     }
+
+    pub fn get_by_name(
+        &self,
+        name: &str,
+    ) -> Option<&PropertyWithId<PropertyValue>> {
+        self.properties.get(name)
+    }
+
+    pub fn get_by_id(
+        &self,
+        id: &PropertyId,
+    ) -> Option<&PropertyWithId<PropertyValue>> {
+        self.properties.values().find(|p| p.id == *id)
+    }
 }
 
 #[derive(Serialize, Debug, Eq, PartialEq)]
 pub struct PageCreateRequest {
     pub parent: Parent,
-    pub properties: Properties,
+    pub properties: PropertiesWithoutIds,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<CreateBlock>>,
 }

@@ -1,8 +1,11 @@
+use std::convert::TryFrom;
+
 use test_log::test;
 mod common;
 use common::test_client;
 use rusticnotion::models::{
     block::FileOrEmojiObject,
+    properties::{Property, PropertyExpect, PropertyValue, WrongPropertyTypeError},
     search::{
         DatabaseQuery, FilterCondition, FilterProperty, FilterValue, NotionSearch,
         PropertyCondition, TextCondition,
@@ -85,11 +88,44 @@ async fn query_database() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     assert_eq!(pages.results().len(), 1);
+    let page = pages.results()[0].clone();
     assert_eq!(
-        pages.results()[0].icon,
+        page.icon,
         Some(FileOrEmojiObject::Emoji {
             emoji: "🌋".to_string(),
         })
+    );
+
+    struct TextValue(String);
+    impl TryFrom<PropertyValue> for TextValue {
+        type Error = WrongPropertyTypeError;
+
+        fn try_from(value: PropertyValue) -> Result<Self, Self::Error> {
+            match value {
+                PropertyValue::Text { rich_text, .. } => {
+                    let combined_text = rich_text
+                        .iter()
+                        .map(|rt| rt.plain_text().to_string())
+                        .collect::<Vec<String>>()
+                        .join("");
+                    Ok(TextValue(combined_text))
+                }
+                _ => Err(WrongPropertyTypeError {
+                    expected: vec!["Text".to_string()],
+                    actual: value.type_name(),
+                }),
+            }
+        }
+    }
+
+    assert_eq!(
+        page.properties
+            .get_by_name("Text")
+            .unwrap()
+            .expect_value::<TextValue>()
+            .unwrap()
+            .0,
+        "hello world".to_string()
     );
 
     let pages = api.query_database(db, DatabaseQuery::default()).await?;
