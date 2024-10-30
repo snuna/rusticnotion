@@ -23,15 +23,13 @@ features = ["serde", "clock"]
 version = "0.11"
 features = ["json"]
 
-[dependencies.tokio]
-version = "1"
-features = ["full"]
 
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
 
 [dev-dependencies]
+tokio = { version = "1", features = ["full"] }
 cargo-husky = "1"
 wiremock = "0.5.2"
 anyhow = "1.0.40"
