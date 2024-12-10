@@ -4,6 +4,7 @@ use crate::models::search::{DatabaseQuery, SearchRequest};
 use crate::models::{Database, ListResponse, Object, Page};
 use ids::{AsIdentifier, PageId};
 use models::block::Block;
+use models::comment::Comment;
 use models::search::NotionSearch;
 use models::PageCreateRequest;
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -110,6 +111,40 @@ impl NotionApi {
             Object::Error { error } => Err(Error::ApiError { error }),
             response => Ok(response),
         }
+    }
+
+    async fn make_json_request_comments(
+        &self,
+        request: RequestBuilder,
+    ) -> Result<ListResponse<Comment>, Error> {
+        let request = request.build()?;
+        let url = request.url();
+        tracing::trace!(
+            method = request.method().as_str(),
+            url = url.as_str(),
+            "Sending request"
+        );
+        let json = self
+            .client
+            .execute(request)
+            .instrument(tracing::trace_span!("Sending request"))
+            .await
+            .map_err(|source| Error::RequestFailed { source })?
+            .text()
+            .instrument(tracing::trace_span!("Reading response"))
+            .await
+            .map_err(|source| Error::ResponseIoError { source })?;
+
+        tracing::debug!("JSON Response: {}", json);
+        #[cfg(test)]
+        {
+            dbg!(serde_json::from_str::<serde_json::Value>(&json)
+                .map_err(|source| Error::JsonParseError { source })?);
+        }
+        let result = serde_json::from_str::<ListResponse<Comment>>(&json)
+            .map_err(|source| Error::JsonParseError { source })?;
+
+        Ok(result)
     }
 
     /// List all the databases shared with the supplied integration token.
@@ -241,5 +276,19 @@ impl NotionApi {
             Object::List { list } => Ok(list.expect_blocks()?),
             response => Err(Error::UnexpectedResponse { response }),
         }
+    }
+
+    pub async fn get_comments<T: AsIdentifier<BlockId>>(
+        &self,
+        block_id: T,
+    ) -> Result<ListResponse<Comment>, Error> {
+        let result = self
+            .make_json_request_comments(self.client.get(&format!(
+                "https://api.notion.com/v1/comments?block_id={block_id}",
+                block_id = block_id.as_id()
+            )))
+            .await?;
+
+        Ok(result)
     }
 }
