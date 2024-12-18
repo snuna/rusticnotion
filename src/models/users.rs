@@ -37,3 +37,13 @@ pub enum User {
         person: Option<Person>,
     },
 }
+
+impl User {
+    pub fn to_common(&self) -> &UserCommon {
+        match self {
+            User::Person { common, person: _ } => common,
+            User::Bot { common, bot: _ } => common,
+            User::User { common, person: _ } => common,
+        }
+    }
+}

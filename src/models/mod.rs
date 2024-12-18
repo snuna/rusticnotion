@@ -1,4 +1,5 @@
 pub mod block;
+pub mod comment;
 pub mod error;
 pub mod paging;
 pub mod properties;
@@ -10,6 +11,7 @@ use crate::models::properties::{PropertyConfiguration, PropertyValue};
 use crate::models::text::RichText;
 use crate::Error;
 use block::FileOrEmojiObject;
+use comment::Comment;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -227,6 +229,10 @@ pub enum Object {
         #[serde(flatten)]
         error: ErrorResponse,
     },
+    Comment {
+        #[serde(flatten)]
+        comment: Comment,
+    },
 }
 
 impl Object {
@@ -237,7 +243,7 @@ impl Object {
 
 #[cfg(test)]
 mod tests {
-    use super::{ListResponse, Object, Page};
+    use super::{comment::Comment, ListResponse, Object, Page};
 
     #[test]
     fn deserialize_page() {
@@ -254,5 +260,11 @@ mod tests {
     fn deserialize_number_format() {
         let _search_results: ListResponse<Object> =
             serde_json::from_str(include_str!("tests/issue_15.json")).unwrap();
+    }
+
+    #[test]
+    fn deserialize_comments() {
+        let _comments: ListResponse<Comment> =
+            serde_json::from_str(include_str!("tests/comments.json")).unwrap();
     }
 }

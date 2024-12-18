@@ -64,6 +64,7 @@ identifer!(PageId);
 identifer!(BlockId);
 identifer!(UserId);
 identifer!(PropertyId);
+identifer!(CommentId);
 
 impl From<PageId> for BlockId {
     fn from(page_id: PageId) -> Self {
