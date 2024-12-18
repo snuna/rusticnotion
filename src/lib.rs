@@ -6,6 +6,7 @@ use ids::{AsIdentifier, PageId};
 use models::block::Block;
 use models::comment::Comment;
 use models::search::NotionSearch;
+use models::users::User;
 use models::PageCreateRequest;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{header, Client, ClientBuilder, RequestBuilder};
@@ -111,6 +112,40 @@ impl NotionApi {
             Object::Error { error } => Err(Error::ApiError { error }),
             response => Ok(response),
         }
+    }
+
+    async fn make_json_request_user(
+        &self,
+        request: RequestBuilder,
+    ) -> Result<User, Error> {
+        let request = request.build()?;
+        let url = request.url();
+        tracing::trace!(
+            method = request.method().as_str(),
+            url = url.as_str(),
+            "Sending request"
+        );
+        let json = self
+            .client
+            .execute(request)
+            .instrument(tracing::trace_span!("Sending request"))
+            .await
+            .map_err(|source| Error::RequestFailed { source })?
+            .text()
+            .instrument(tracing::trace_span!("Reading response"))
+            .await
+            .map_err(|source| Error::ResponseIoError { source })?;
+
+        tracing::debug!("JSON Response: {}", json);
+        #[cfg(test)]
+        {
+            dbg!(serde_json::from_str::<serde_json::Value>(&json)
+                .map_err(|source| Error::JsonParseError { source })?);
+        }
+        let result = serde_json::from_str::<User>(&json)
+            .map_err(|source| Error::JsonParseError { source })?;
+
+        Ok(result)
     }
 
     async fn make_json_request_comments(
@@ -290,5 +325,23 @@ impl NotionApi {
             .await?;
 
         Ok(result)
+    }
+
+    pub async fn get_user(
+        &self,
+        user_id: &str,
+    ) -> Result<User, Error> {
+        tracing::info!("Notion Client Get User");
+
+        let result = self
+            .make_json_request_user(
+                self.client
+                    .get(&format!("https://api.notion.com/v1/users/{user_id}")),
+            )
+            .await;
+
+        tracing::info!("Notion Client User: {:#?}", result);
+
+        Ok(result?)
     }
 }
