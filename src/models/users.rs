@@ -38,6 +38,7 @@ pub enum User {
     User {
         #[serde(flatten)]
         common: UserCommon,
+        #[serde(skip_serializing_if = "Option::is_none")]
         person: Option<Person>,
     },
 }
