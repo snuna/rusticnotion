@@ -1,7 +1,7 @@
 use crate::ids::UserId;
 use crate::models::properties::{DateOrDateTime, DateValue};
 use crate::models::text::{
-    Annotations, Link, MentionObject, RichText, RichTextCommon, Text, TextColor,
+    Annotations, Link, MentionObject, RichText, RichTextCommon, Text, TextColor, UserMention,
 };
 use crate::models::users::{Person, User, UserCommon};
 use chrono::{DateTime, NaiveDate};
@@ -41,37 +41,27 @@ fn rich_text_mention_user_person() {
     let rich_text_mention_user_person: RichText =
         serde_json::from_str(include_str!("tests/rich_text_mention_user_person.json")).unwrap();
     assert_eq!(
-    rich_text_mention_user_person,
-    RichText::Mention {
-      rich_text: RichTextCommon {
-        plain_text: "@John Doe".to_string(),
-        href: None,
-        annotations: Some(Annotations {
-          bold: Some(false),
-          code: Some(false),
-          color: Some(TextColor::Default),
-          italic: Some(false),
-          strikethrough: Some(false),
-          underline: Some(false),
-        }),
-      },
-      mention: MentionObject::User {
-        user: User::User {
-          common: UserCommon {
-            id: UserId::from_str("1118608e-35e8-4fa3-aef7-a4ced85ce8e0").unwrap(),
-            name: Some("John Doe".to_string()),
-            avatar_url: Some(
-              "https://secure.notion-static.com/e6a352a8-8381-44d0-a1dc-9ed80e62b53d.jpg"
-                .to_string()
-            ),
-          },
-          person: Some(Person {
-            email: Some("john.doe@gmail.com".to_string())
-          }),
+        rich_text_mention_user_person,
+        RichText::Mention {
+            rich_text: RichTextCommon {
+                plain_text: "@John Doe".to_string(),
+                href: None,
+                annotations: Some(Annotations {
+                    bold: Some(false),
+                    code: Some(false),
+                    color: Some(TextColor::Default),
+                    italic: Some(false),
+                    strikethrough: Some(false),
+                    underline: Some(false),
+                }),
+            },
+            mention: MentionObject::User {
+                user: UserMention {
+                    id: UserId::from_str("1118608e-35e8-4fa3-aef7-a4ced85ce8e0").unwrap(),
+                },
+            },
         }
-      },
-    }
-  )
+    )
 }
 
 #[test]
