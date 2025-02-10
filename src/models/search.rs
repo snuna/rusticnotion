@@ -317,6 +317,8 @@ pub struct DatabaseQuery {
     pub filter: Option<FilterCondition>,
     #[serde(flatten)]
     pub paging: Option<Paging>,
+    #[serde(skip)]
+    pub filter_properties: Option<Vec<String>>,
 }
 
 impl Pageable for DatabaseQuery {

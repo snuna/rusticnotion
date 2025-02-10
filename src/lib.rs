@@ -234,14 +234,24 @@ impl NotionApi {
         T: Into<DatabaseQuery>,
         D: AsIdentifier<DatabaseId>,
     {
+        let query: DatabaseQuery = query.into();
+        let filter_properties_query = query.clone().filter_properties.map(|properties| {
+            let props = properties
+                .into_iter()
+                .map(|property| format!("filter_properties={}", property.clone()))
+                .collect::<Vec<String>>()
+                .join("&");
+            format!("?{}", props)
+        });
         let result = self
             .make_json_request(
                 self.client
-                    .post(&format!(
-                        "https://api.notion.com/v1/databases/{database_id}/query",
-                        database_id = database.as_id()
+                    .post(format!(
+                        "https://api.notion.com/v1/databases/{database_id}/query{filter_properties_query}",
+                        database_id = database.as_id(),
+                        filter_properties_query = filter_properties_query.unwrap_or_default()
                     ))
-                    .json(&query.into()),
+                    .json(&query),
             )
             .await?;
         match result {
