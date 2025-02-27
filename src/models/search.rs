@@ -247,7 +247,8 @@ pub enum RelationCondition {
 pub enum FormulaCondition {
     /// Only return pages where the result type of the page property formula is "text"
     /// and the provided text filter condition matches the formula's value.
-    Text(TextCondition),
+    #[serde(rename = "string")]
+    TextCondition(TextCondition),
     /// Only return pages where the result type of the page property formula is "number"
     /// and the provided number filter condition matches the formula's value.
     Number(NumberCondition),
